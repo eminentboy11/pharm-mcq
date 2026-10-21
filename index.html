@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pharmacology MCQ Simulator</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    background: linear-gradient(135deg, #e8f0fb, #f7fbf4); color: #1d2b3a; min-height: 100vh;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 20px 16px 40px; }
+  header { text-align: center; margin-bottom: 18px; }
+  header h1 { margin: 0; font-size: 1.6rem; color: #143c6e; }
+  header p { margin: 4px 0 0; color: #5a6b7d; font-size: 0.95rem; }
+  .card {
+    background: #fff; border-radius: 16px; padding: 22px; box-shadow: 0 6px 22px rgba(20,60,110,0.10);
+  }
+  .hidden { display: none !important; }
+  h2 { margin: 0 0 12px; font-size: 1.2rem; color: #143c6e; }
+  .topics { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 12px 0 18px; }
+  .topic-btn, .opt, .btn {
+    font: inherit; cursor: pointer; border: 2px solid #c9d7ea; background: #f5f9ff; color: #143c6e;
+    border-radius: 12px; padding: 12px 14px; text-align: left; transition: all .15s;
+  }
+  .topic-btn:hover, .opt:hover:not(:disabled) { border-color: #3d7bd0; background: #eaf3ff; }
+  .topic-btn.sel { border-color: #2e8b57; background: #e9f8ef; color: #1e6b41; font-weight: 600; }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin: 10px 0; }
+  .row label { font-size: 0.95rem; }
+  select, input[type=checkbox] { font: inherit; }
+  select { padding: 6px 10px; border-radius: 8px; border: 1px solid #c9d7ea; }
+  .btn-primary {
+    background: #143c6e; color: #fff; border: none; font-weight: 600; text-align: center; width: 100%; padding: 14px;
+  }
+  .btn-primary:hover:not(:disabled) { background: #0f2f57; }
+  .btn-primary:disabled { opacity: .45; cursor: not-allowed; }
+  .btn-alt { background: #fff; color: #143c6e; text-align: center; width: 100%; margin-top: 10px; }
+  .progress { height: 8px; background: #e3ebf6; border-radius: 99px; overflow: hidden; margin-bottom: 8px; }
+  .progress > div { height: 100%; background: linear-gradient(90deg, #3d7bd0, #2e8b57); width: 0%; transition: width .3s; }
+  .meta { display: flex; justify-content: space-between; font-size: 0.88rem; color: #5a6b7d; margin-bottom: 10px; }
+  .timer { font-weight: 700; color: #143c6e; }
+  .timer.low { color: #c0392b; }
+  .tag { display: inline-block; background: #eef3fa; color: #3d5a80; border-radius: 99px; padding: 2px 10px; font-size: 0.78rem; margin-bottom: 8px; }
+  .question { font-size: 1.08rem; line-height: 1.5; margin: 6px 0 14px; font-weight: 600; }
+  .opts { display: grid; gap: 10px; }
+  .opt.correct { border-color: #2e8b57 !important; background: #e9f8ef !important; color: #1e6b41 !important; }
+  .opt.wrong { border-color: #c0392b !important; background: #fdecea !important; color: #922b21 !important; }
+  .opt:disabled { cursor: default; }
+  .feedback { margin-top: 14px; padding: 12px 14px; border-radius: 10px; font-size: 0.95rem; line-height: 1.45; }
+  .feedback.good { background: #e9f8ef; color: #1e6b41; }
+  .feedback.bad { background: #fdecea; color: #922b21; }
+  .score-big { font-size: 2.6rem; font-weight: 800; color: #143c6e; text-align: center; margin: 8px 0 4px; }
+  .center { text-align: center; }
+  .review-item { border-top: 1px solid #e3ebf6; padding: 12px 0; font-size: 0.93rem; }
+  .review-item .ok { color: #1e6b41; font-weight: 600; }
+  .review-item .no { color: #922b21; font-weight: 600; }
+  .note { font-size: 0.8rem; color: #7a8a9b; margin-top: 16px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Pharmacology MCQ Simulator</h1>
+    <p>Practice objective questions from your handout and past-question topics</p>
+  </header>
+
+  <!-- START SCREEN -->
+  <div id="start" class="card">
+    <h2>Choose your topics</h2>
+    <div class="topics" id="topicButtons"></div>
+
+    <div class="row">
+      <label>Number of questions:
+        <select id="countSel">
+          <option value="10">10</option>
+          <option value="20" selected>20</option>
+          <option value="all">All</option>
+        </select>
+      </label>
+      <label><input type="checkbox" id="timerChk" checked> Timer (25 seconds per question)</label>
+    </div>
+
+    <button class="btn btn-primary" id="startBtn">Start Quiz</button>
+    <p class="note">Questions are shuffled each time you play. Answer key and explanations are included.</p>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div id="quiz" class="card hidden">
+    <div class="progress"><div id="bar"></div></div>
+    <div class="meta">
+      <span id="counter"></span>
+      <span>Score: <strong id="liveScore">0</strong></span>
+      <span class="timer" id="timer"></span>
+    </div>
+    <span class="tag" id="qTag"></span>
+    <div class="question" id="qText"></div>
+    <div class="opts" id="opts"></div>
+    <div id="feedback" class="feedback hidden"></div>
+    <button class="btn btn-primary hidden" id="nextBtn" style="margin-top:14px">Next Question</button>
+  </div>
+
+  <!-- RESULT SCREEN -->
+  <div id="result" class="card hidden">
+    <h2 class="center">Quiz complete</h2>
+    <div class="score-big" id="finalScore"></div>
+    <p class="center" id="finalMsg"></p>
+    <div id="reviewList"></div>
+    <button class="btn btn-primary" id="retryWrong" style="margin-top:12px">Practise my wrong answers</button>
+    <button class="btn btn-alt" id="restartBtn">Back to topics</button>
+  </div>
+</div>
+
+<script>
+const QUESTIONS = [
+  { t:"Basics & Definitions", q:"Which best explains the origin of the word 'Pharmacology'?", o:["pharmakon (drug) and logos (study)", "pharmakos and logia", "pharma and graphos", "pharmakon and genesis"], a:0, e:"Pharmacology comes from Greek pharmakon (drug) and logos (study)." },
+  { t:"Essential Drugs & DRF", q:"The Bamako Initiative of 1987 gave rise to which programme in Africa?", o:["National Health Insurance Scheme", "Expanded Programme on Immunization", "Essential Drug Programme", "Primary Health Care Programme"], a:2, e:"The Bamako Initiative led to the Essential Drug Programme and drug revolving funds." },
+  { t:"Basics & Definitions", q:"What the body does to a drug is called?", o:["Pharmacodynamics", "Pharmacokinetics", "Pharmacognosy", "Pharmacovigilance"], a:1, e:"Pharmacokinetics is what the body does to the drug: absorption, distribution, metabolism and excretion. Pharmacodynamics is what the drug does to the body." },
+  { t:"Adverse Effects & Interactions", q:"The toxic metabolite of paracetamol that damages the liver in overdose is called?", o:["Acetaldehyde", "Disulfiram", "Primaquine", "NAPQI"], a:3, e:"NAPQI is the toxic metabolite. In overdose, glutathione is depleted and NAPQI damages liver cells." },
+  { t:"Basics & Definitions", q:"The study of how a patient's genetic makeup affects the response to drugs is called?", o:["Pharmacogenetics", "Pharmacognosy", "Pharmacodynamics", "Pharmacopoeia"], a:0, e:"Pharmacogenetics studies how genetic differences affect drug response." },
+  { t:"Basics & Definitions", q:"Side effects of drugs are best described as effects that are:", o:["Severe and require hospitalisation", "Never caused by the drug", "Of lesser severity and tolerable", "Always fatal"], a:2, e:"Side effects are usually mild, predictable and tolerable, unlike serious adverse reactions." },
+  { t:"Adverse Effects & Interactions", q:"Stevens-Johnson Syndrome is a severe adverse effect commonly associated with which group of drugs?", o:["Paracetamol", "Sulfonamides", "Insulin", "Vitamin C"], a:1, e:"Sulfonamides are a well-known cause of Stevens-Johnson Syndrome, a serious skin reaction." },
+  { t:"Adverse Effects & Interactions", q:"Which of these drugs may trigger haemolysis in a patient with G6PD deficiency?", o:["Amoxicillin", "Metformin", "Primaquine", "Omeprazole"], a:2, e:"Primaquine can cause haemolysis in people with G6PD deficiency." },
+  { t:"Legal & Safety", q:"The Pharmacovigilance Centre for the South-South geopolitical zone of Nigeria is located at?", o:["UBTH", "LUTH", "UCH", "UNTH"], a:0, e:"Per your answer key: UBTH (University of Benin Teaching Hospital)." },
+  { t:"Prescriptions & Dosing", q:"The prescription abbreviation 'Nocte' means?", o:["In the morning", "As needed", "Every 6 hours", "At night / bedtime"], a:3, e:"Nocte means at night (bedtime). Mane means in the morning." },
+  { t:"Prescriptions & Dosing", q:"A drug prescribed for '5/7' is to be given for?", o:["5 times in 7 hours", "5 days", "5 weeks", "5 doses daily"], a:1, e:"5/7 means 5 days of treatment." },
+  { t:"Prescriptions & Dosing", q:"A drug prescribed 8-hourly but given as TDS within 12 hours (6am-6pm) may result in:", o:["Faster excretion of the drug", "Loss of potency of the drug", "Drug concentration rising above the therapeutic limit, causing severe adverse effects", "No change in the effect of the drug"], a:2, e:"Giving doses too close together can push blood levels above the therapeutic range." },
+  { t:"Drug Sources & Classes", q:"Lasix is the brand name of which drug?", o:["Furosemide", "Losartan", "Lisinopril", "Lignocaine"], a:0, e:"Lasix is the brand name for furosemide, a diuretic." },
+  { t:"Drug Sources & Classes", q:"Which of the following is NOT a nursing implication of complementary therapy?", o:["Taking a thorough drug history that includes herbal remedies", "Educating patients on the risks of combining herbal remedies with prescribed drugs", "Being aware that galenicals may interact with prescribed drugs", "Being judgmental towards patients who use herbal remedies"], a:3, e:"Nurses should be non-judgemental and ask about herbal use, since it can interact with prescribed drugs." },
+  { t:"Drug Sources & Classes", q:"In the preparation of galenicals, alcohol is used because it serves as both:", o:["Colouring agent and sweetener", "Solvent and preservative", "Antibiotic and antidote", "Emulsifier and stabiliser"], a:1, e:"Alcohol dissolves plant constituents (solvent) and preserves the preparation." },
+  { t:"Drug Sources & Classes", q:"Quinine is a drug obtained from which plant source?", o:["Foxglove", "Opium poppy", "Cinchona bark", "Neem leaves"], a:2, e:"Quinine is extracted from cinchona bark." },
+  { t:"Drug Sources & Classes", q:"Which of the following is an example of a drug from a mineral source?", o:["Morphine", "Digoxin", "Insulin", "Calcium carbonate"], a:3, e:"Calcium carbonate is a mineral-based drug. Morphine and digoxin are plant-derived, and insulin is a hormone." },
+  { t:"Drug Sources & Classes", q:"Steroids should be withdrawn gradually (dose tapering) in order to:", o:["Allow the adrenal glands to resume normal cortisol production", "Increase the potency of the steroid", "Reduce the cost of treatment", "Prevent the steroid from being photolabile"], a:0, e:"Long-term steroids suppress the adrenal glands, so tapering lets cortisol production recover." },
+  { t:"Drug Sources & Classes", q:"Which of the following is NOT a steroid?", o:["Dexamethasone", "Ibuprofen", "Hydrocortisone", "Betamethasone"], a:1, e:"Ibuprofen is an NSAID, not a steroid. The others are corticosteroids." },
+  { t:"Legal & Safety", q:"Which of the following is NOT a controlled drug?", o:["Pethidine", "Diazepam", "Amoxicillin", "Morphine"], a:2, e:"Amoxicillin is an antibiotic and is not controlled. Pethidine, diazepam and morphine are controlled." },
+  { t:"Essential Drugs & DRF", q:"Which of the following is NOT a condition for a drug to be classified as essential?", o:["It must be efficacious", "It must be readily affordable", "It must treat a disease that is prevalent", "It must be a newly discovered branded product"], a:3, e:"Essential drugs are effective, affordable, safe and address common conditions. They are not new branded products." },
+  { t:"Essential Drugs & DRF", q:"In unity dose dispensing, drugs are dispensed to a patient for no longer than?", o:["6 hours", "12 hours", "7 days", "24 hours"], a:3, e:"Unit dose dispensing covers up to 24 hours of doses at a time." },
+  { t:"Basics & Definitions", q:"Polypharmacy is defined as the prescribing of:", o:["Five or more drugs simultaneously", "Two drugs simultaneously", "Three drugs only", "One drug only"], a:0, e:"Polypharmacy is generally defined as five or more drugs at the same time." },
+  { t:"Basics & Definitions", q:"A child of about 12-13 years with a body weight comparable to an adult, who may be given full adult doses, is called a?", o:["Paediatric adult", "Clinical adult", "Geriatric", "Neonate"], a:1, e:"A 'clinical adult' is a child whose size and weight are close to an adult's, so adult doses may be used." },
+  { t:"Basics & Definitions", q:"Underdose of a drug leads to?", o:["Toxicity and death", "Hypersensitivity", "Habituation", "Treatment failure"], a:3, e:"Too little drug fails to reach the therapeutic level, so the treatment does not work." },
+  { t:"Routes & Administration", q:"Which diluent must NOT be used to reconstitute Ceftriaxone (Rocephin)?", o:["Water for injection", "Lidocaine", "Calcium-containing solutions such as Ringer's lactate", "Both (a) and (b)"], a:2, e:"Ceftriaxone must not be mixed with calcium-containing solutions such as Ringer's lactate, because of precipitation risk." },
+  { t:"Routes & Administration", q:"Which route of drug administration has the fastest onset of action?", o:["Intravenous", "Intramuscular", "Subcutaneous", "Oral"], a:0, e:"IV drugs go straight into the bloodstream, so they act fastest." },
+  { t:"Routes & Administration", q:"Drugs given by the sublingual route are absorbed directly into the bloodstream and therefore bypass?", o:["Absorption", "First-pass hepatic metabolism", "Distribution", "Excretion"], a:1, e:"Sublingual drugs drain into the systemic circulation, so they avoid first-pass liver metabolism." },
+  { t:"Routes & Administration", q:"A solid preparation that melts at body temperature after insertion into the rectum is called a?", o:["Lozenge", "Enema", "Linctus", "Suppository"], a:3, e:"A suppository is a solid that melts at body temperature after rectal insertion." },
+  { t:"Adverse Effects & Interactions", q:"Flumazenil is the specific antidote for overdose of?", o:["Opioids", "Benzodiazepines", "Warfarin", "Organophosphates"], a:1, e:"Flumazenil reverses benzodiazepine overdose. Naloxone is the antidote for opioids." },
+  { t:"Routes & Administration", q:"Respecting the patient's decision not to take a drug is which of the 10 rights of medication administration?", o:["Right to refuse", "Right reason", "Right response", "Right documentation"], a:0, e:"The right to refuse means respecting a patient's decision not to take a medication." },
+  { t:"Legal & Safety", q:"The preferable storage for photolabile drugs is?", o:["Refrigerator", "Freezer", "Transparent bottles on an open shelf", "Amber-coloured containers or dark cupboards"], a:3, e:"Photolabile drugs break down in light, so they need amber containers or dark storage." },
+  { t:"Basics & Definitions", q:"Drug resistance refers to?", o:["A patient needing higher doses for the same effect", "Micro-organisms developing the ability to withstand the effect of a drug", "Psychological reliance on a drug", "Compulsive drug-seeking behaviour"], a:1, e:"Drug resistance occurs when micro-organisms survive the drug's effect." },
+  { t:"Legal & Safety", q:"A nurse who witnesses abuse or diversion of controlled drugs and fails to report it is:", o:["Not responsible in any way", "Entitled to a reward", "Liable only if she is the one in charge", "Equally culpable under the law"], a:3, e:"Failing to report abuse or diversion makes the witnessing nurse equally responsible." },
+  { t:"Basics & Definitions", q:"The half-life of a drug is the time required for the drug concentration in the blood to?", o:["Double", "Reach zero", "Fall by 50%", "Be fully absorbed"], a:2, e:"Half-life is the time for the blood concentration to fall by half." },
+  { t:"Adverse Effects & Interactions", q:"Probenecid increases the level and efficacy of ampicillin. This is an example of:", o:["Antagonism", "Potentiation", "Idiosyncrasy", "Tolerance"], a:1, e:"Potentiation is when one drug increases the effect of another." },
+  { t:"Adverse Effects & Interactions", q:"ACE inhibitors such as lisinopril should not be combined with potassium supplements because of the risk of:", o:["Hypokalemia", "Hypoglycaemia", "Hypernatraemia", "Hyperkalemia"], a:3, e:"ACE inhibitors raise potassium levels, so adding potassium supplements risks hyperkalaemia." },
+  { t:"Adverse Effects & Interactions", q:"When amiodarone is given with digoxin, it may:", o:["Raise digoxin levels, leading to toxicity", "Lower digoxin levels", "Cancel the action of digoxin", "Have no effect on digoxin"], a:0, e:"Amiodarone increases digoxin levels, so digoxin toxicity can occur." },
+  { t:"Adverse Effects & Interactions", q:"Tetracycline is contraindicated in: (i) Pregnancy (ii) Children under 12 years (iii) Adults above 18 years (iv) Elderly patients", o:["i & ii only", "i, ii & iii only", "iii & iv only", "All of the above"], a:0, e:"Tetracyclines are contraindicated in pregnancy and in children under 12 (they affect bone and teeth development)." },
+  { t:"Essential Drugs & DRF", q:"The Drug Revolving Fund (DRF) is designed mainly to:", o:["Provide free drugs to all patients", "Ensure continuous availability of quality essential medicines", "Pay the salaries of hospital staff", "Fund the construction of hospital buildings"], a:1, e:"The DRF keeps essential medicines continuously available through cost recovery." },
+  { t:"Essential Drugs & DRF", q:"The money generated from drug sales in a DRF is used exclusively to:", o:["Pay staff salaries", "Buy hospital equipment", "Replenish the drug stock", "Fund general hospital expenses"], a:2, e:"DRF sales income is used to restock drugs, keeping the fund revolving." },
+  { t:"Essential Drugs & DRF", q:"Sources of initial capital for a DRF include:", o:["Government allocations", "Donor agencies such as WHO and UNICEF", "Community contributions", "All of the above"], a:3, e:"DRFs can be started from government, donors and community contributions." },
+  { t:"Essential Drugs & DRF", q:"In a DRF, drugs are sold to patients at?", o:["Cost price plus a small mark-up", "Below cost price", "Market price with a very high profit", "No cost at all"], a:0, e:"Drugs are sold at cost plus a small mark-up, so the fund can restock." },
+  { t:"Essential Drugs & DRF", q:"DRF funds must be kept in:", o:["The general hospital revenue account", "The ward cash box", "A separate dedicated bank account", "The personal account of the head pharmacist"], a:2, e:"DRF money should be in its own dedicated bank account, separate from other hospital funds." },
+  { t:"Essential Drugs & DRF", q:"To prevent unauthorised withdrawals, DRF financial transactions typically require:", o:["At least two authorised signatories", "One signatory only", "The signature of the patient", "No signature"], a:0, e:"Two authorised signatories help prevent misuse of DRF funds." },
+  { t:"Essential Drugs & DRF", q:"The cost of drugs given under exemptions to vulnerable patients should be:", o:["Absorbed directly by the DRF", "Paid for by the nurse", "Recovered from the patient later", "Reimbursed by the government or a hospital welfare budget"], a:3, e:"Exempt patients' drug costs should be reimbursed by government or a welfare budget, not absorbed by the fund." },
+  { t:"Essential Drugs & DRF", q:"Which of the following is NOT a role of the nurse in a DRF scheme?", o:["Accurate record-keeping of drugs received and administered", "Minimising wastage through correct storage and FEFO", "Dispensing drugs free to any patient who requests", "Verifying the status of patients who qualify for exemption"], a:2, e:"Nurses should not dispense free drugs to anyone who asks. That undermines the scheme and the exemption rules." },
+  { t:"Essential Drugs & DRF", q:"The Average Monthly Consumption Rate (AMCR) of a drug is calculated by averaging the quantity dispensed over:", o:["One month only", "3-4 consecutive months, excluding abnormal months", "The whole year", "24 months"], a:1, e:"AMCR uses 3-4 consecutive normal months, leaving out abnormal months." },
+  { t:"Essential Drugs & DRF", q:"Which of these months should be excluded from AMCR calculation? (i) Strike months (ii) Festival months (iii) Outbreak/epidemic months (iv) Months with normal dispensing", o:["i, ii & iii only", "i & iv only", "ii & iv only", "All of the above"], a:0, e:"Abnormal months such as strikes, festivals and outbreaks are excluded. Normal months are kept." },
+  { t:"Essential Drugs & DRF", q:"A pharmacy dispensed 3,500, 4,000 and 4,500 units of a drug in three normal months. What is the AMCR?", o:["3,500 units", "4,500 units", "4,000 units", "12,000 units"], a:2, e:"(3,500 + 4,000 + 4,500) \u00f7 3 = 12,000 \u00f7 3 = 4,000 units." },
+];
+
+// ---------- state ----------
+let pool = [], idx = 0, score = 0, timerOn = true, timerId = null, timeLeft = 25, log = [], answered = false;
+const TIME = 25;
+
+// ---------- setup ----------
+const topics = [...new Set(QUESTIONS.map(q => q.t))];
+let selTopics = new Set(topics);
+const tb = document.getElementById('topicButtons');
+
+function renderTopics() {
+  tb.innerHTML = '';
+  const all = document.createElement('button');
+  all.className = 'topic-btn' + (selTopics.size === topics.length ? ' sel' : '');
+  all.textContent = '✓ All topics';
+  all.onclick = () => { selTopics = new Set(selTopics.size === topics.length ? [] : topics); renderTopics(); };
+  tb.appendChild(all);
+  topics.forEach(t => {
+    const b = document.createElement('button');
+    const count = QUESTIONS.filter(q => q.t === t).length;
+    b.className = 'topic-btn' + (selTopics.has(t) ? ' sel' : '');
+    b.textContent = `${selTopics.has(t) ? '✓ ' : ''}${t} (${count})`;
+    b.onclick = () => { selTopics.has(t) ? selTopics.delete(t) : selTopics.add(t); renderTopics(); };
+    tb.appendChild(b);
+  });
+}
+renderTopics();
+
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+document.getElementById('startBtn').onclick = () => {
+  let base = QUESTIONS.filter(q => selTopics.has(q.t));
+  if (!base.length) { alert('Pick at least one topic.'); return; }
+  shuffle(base);
+  const c = document.getElementById('countSel').value;
+  pool = c === 'all' ? base : base.slice(0, Math.min(+c, base.length));
+  timerOn = document.getElementById('timerChk').checked;
+  startQuiz(pool);
+};
+
+function startQuiz(list) {
+  idx = 0; score = 0; log = [];
+  show('quiz');
+  renderQ();
+}
+
+// ---------- quiz ----------
+function show(id) {
+  ['start', 'quiz', 'result'].forEach(s => document.getElementById(s).classList.toggle('hidden', s !== id));
+}
+
+function renderQ() {
+  answered = false;
+  const q = pool[idx];
+  document.getElementById('counter').textContent = `Question ${idx + 1} of ${pool.length}`;
+  document.getElementById('liveScore').textContent = score;
+  document.getElementById('bar').style.width = ((idx) / pool.length * 100) + '%';
+  document.getElementById('qTag').textContent = `${q.t} · From your question bank`;
+  document.getElementById('qText').textContent = q.q;
+  const box = document.getElementById('opts');
+  box.innerHTML = '';
+  q.o.forEach((text, i) => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.textContent = String.fromCharCode(65 + i) + '.  ' + text;
+    b.onclick = () => choose(i);
+    box.appendChild(b);
+  });
+  document.getElementById('feedback').classList.add('hidden');
+  document.getElementById('nextBtn').classList.add('hidden');
+  document.getElementById('nextBtn').textContent = idx === pool.length - 1 ? 'See Results' : 'Next Question';
+  clearInterval(timerId);
+  const t = document.getElementById('timer');
+  if (timerOn) {
+    timeLeft = TIME; t.textContent = `⏱ ${timeLeft}s`; t.classList.remove('low');
+    timerId = setInterval(() => {
+      timeLeft--;
+      t.textContent = `⏱ ${timeLeft}s`;
+      if (timeLeft <= 5) t.classList.add('low');
+      if (timeLeft <= 0) { clearInterval(timerId); if (!answered) choose(-1); }
+    }, 1000);
+  } else { t.textContent = ''; }
+}
+
+function choose(i) {
+  if (answered) return;
+  answered = true;
+  clearInterval(timerId);
+  const q = pool[idx];
+  const btns = document.querySelectorAll('#opts .opt');
+  btns.forEach((b, k) => { b.disabled = true; if (k === q.a) b.classList.add('correct'); });
+  const ok = i === q.a;
+  if (i >= 0 && i !== q.a) btns[i].classList.add('wrong');
+  if (ok) score++;
+  log.push({ q: q.q, chosen: i, correct: q.a, opts: q.o, e: q.e, ok, t: q.t });
+  document.getElementById('liveScore').textContent = score;
+  const f = document.getElementById('feedback');
+  f.className = 'feedback ' + (ok ? 'good' : 'bad');
+  const head = ok ? '✅ Correct!' : (i === -1 ? '⏰ Time is up.' : '❌ Not quite.');
+  f.innerHTML = `<strong>${head}</strong> The answer is <strong>${String.fromCharCode(65 + q.a)}</strong>. ${q.e}`;
+  f.classList.remove('hidden');
+  document.getElementById('nextBtn').classList.remove('hidden');
+}
+
+document.getElementById('nextBtn').onclick = () => {
+  idx++;
+  if (idx < pool.length) renderQ(); else showResult();
+};
+
+// ---------- results ----------
+function showResult() {
+  clearInterval(timerId);
+  document.getElementById('bar').style.width = '100%';
+  show('result');
+  const pct = Math.round(score / pool.length * 100);
+  document.getElementById('finalScore').textContent = `${score} / ${pool.length}  (${pct}%)`;
+  let msg = pct >= 80 ? 'Excellent work. You are ready for this topic. 🎉'
+          : pct >= 60 ? 'Good effort. Review the ones you missed below. 👍'
+          : 'Keep practising. Read the explanations and try again. 💪';
+  document.getElementById('finalMsg').textContent = msg;
+  const rl = document.getElementById('reviewList');
+  rl.innerHTML = '<h2 style="margin-top:18px">Review</h2>';
+  log.forEach((r, n) => {
+    const d = document.createElement('div');
+    d.className = 'review-item';
+    const given = r.chosen === -1 ? 'No answer' : String.fromCharCode(65 + r.chosen) + '. ' + r.opts[r.chosen];
+    d.innerHTML = `<div><strong>${n + 1}. ${r.q}</strong></div>` +
+      (r.ok ? `<div class="ok">✔ Correct: ${String.fromCharCode(65 + r.correct)}. ${r.opts[r.correct]}</div>`
+            : `<div class="no">✘ You chose: ${given}</div><div class="ok">✔ Correct: ${String.fromCharCode(65 + r.correct)}. ${r.opts[r.correct]}</div>`) +
+      `<div style="color:#5a6b7d">${r.e}</div>`;
+    rl.appendChild(d);
+  });
+  document.getElementById('retryWrong').classList.toggle('hidden', log.every(r => r.ok));
+}
+
+document.getElementById('retryWrong').onclick = () => {
+  const wrongQs = log.filter(r => !r.ok).map(r => QUESTIONS.find(q => q.q === r.q));
+  pool = shuffle(wrongQs);
+  startQuiz(pool);
+};
+
+document.getElementById('restartBtn').onclick = () => { show('start'); renderTopics(); };
+</script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4e3e1137b0bf64f',t:'MTc5MjYyMzYzNA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
