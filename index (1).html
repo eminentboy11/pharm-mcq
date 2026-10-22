@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pharmacology MCQ Simulator</title>
+<style>
+:root{--bg:linear-gradient(135deg,#e8f0fb,#f7fbf4);--card:#fff;--text:#1d2b3a;--muted:#5a6b7d;--accent:#143c6e;--accent2:#2e8b57;--border:#c9d7ea;--soft:#f5f9ff;--soft2:#eaf3ff;--good-bg:#e9f8ef;--good-tx:#1e6b41;--bad-bg:#fdecea;--bad-tx:#922b21;--shadow:rgba(20,60,110,.10);--track:#e3ebf6}
+body.dark{--bg:linear-gradient(135deg,#0d1622,#14202e);--card:#1b2838;--text:#e6edf5;--muted:#9fb0c3;--accent:#8ab8ff;--accent2:#4fd08a;--border:#334a66;--soft:#223349;--soft2:#2a3f59;--good-bg:#17402b;--good-tx:#9ff0bf;--bad-bg:#4a1f1d;--bad-tx:#ffb4ab;--shadow:rgba(0,0,0,.35);--track:#2a3f59}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.wrap{max-width:760px;margin:0 auto;padding:16px 14px 40px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.top h1{margin:0;font-size:1.35rem;color:var(--accent)}
+.nav{display:flex;gap:8px;flex-wrap:wrap}
+.card{background:var(--card);border-radius:16px;padding:20px;box-shadow:0 6px 22px var(--shadow)}
+.hidden{display:none !important}
+h2{margin:0 0 12px;font-size:1.15rem;color:var(--accent)}
+h3{margin:18px 0 8px;font-size:1rem;color:var(--accent)}
+.muted{color:var(--muted);font-size:.9rem}
+.center{text-align:center}
+.btn{font:inherit;cursor:pointer;border:2px solid var(--border);background:var(--soft);color:var(--accent);border-radius:12px;padding:10px 14px;transition:.15s}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600;width:100%;padding:13px}
+.btn.ghost{background:transparent}
+.btn.small{padding:6px 10px;font-size:.9rem}
+.btn.block{width:100%;margin-top:10px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 16px}
+.chip{font:inherit;cursor:pointer;border:2px solid var(--border);background:var(--soft);color:var(--accent);border-radius:99px;padding:7px 12px}
+.chip.sel{border-color:var(--accent2);background:var(--good-bg);color:var(--good-tx);font-weight:600}
+.modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:16px}
+.modeCard{font:inherit;text-align:left;cursor:pointer;border:2px solid var(--border);background:var(--soft);color:var(--text);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:4px}
+.modeCard span{font-size:.85rem;color:var(--muted)}
+.modeCard.active{border-color:var(--accent);background:var(--soft2)}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:10px 0}
+select{font:inherit;padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text)}
+.resume{background:var(--soft2);border-radius:12px;padding:12px;margin-bottom:16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.resume span{flex:1}
+.progress{height:8px;background:var(--track);border-radius:99px;overflow:hidden;margin-bottom:8px}
+.progress>div{height:100%;background:linear-gradient(90deg,#3d7bd0,var(--accent2));width:0;transition:width .3s}
+.meta{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:.88rem;color:var(--muted);margin-bottom:10px;align-items:center}
+.pill{background:var(--soft2);color:var(--accent);border-radius:99px;padding:2px 10px;font-weight:600}
+.timer{font-weight:700;color:var(--accent)}
+.timer.low{color:#c0392b}
+.tag{display:inline-block;background:var(--soft);color:var(--muted);border-radius:99px;padding:2px 10px;font-size:.78rem;margin-bottom:8px}
+.question{font-size:1.06rem;line-height:1.5;margin:6px 0 14px;font-weight:600}
+.opts{display:grid;gap:10px}
+.opt{font:inherit;text-align:left;cursor:pointer;border:2px solid var(--border);background:var(--soft);color:var(--accent);border-radius:12px;padding:12px 14px;transition:.15s}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt:disabled{cursor:default}
+.opt.correct{border-color:var(--accent2)!important;background:var(--good-bg)!important;color:var(--good-tx)!important}
+.opt.wrong{border-color:#c0392b!important;background:var(--bad-bg)!important;color:var(--bad-tx)!important}
+.opt.selected{border-color:var(--accent)!important;background:var(--soft2)!important;box-shadow:0 0 0 2px var(--accent) inset}
+.explain{background:var(--good-bg);color:var(--good-tx);border-radius:12px;padding:14px;line-height:1.5}
+.feedback{margin-top:14px;padding:12px 14px;border-radius:10px;font-size:.95rem;line-height:1.45}
+.feedback.good{background:var(--good-bg);color:var(--good-tx)}
+.feedback.bad{background:var(--bad-bg);color:var(--bad-tx)}
+.navgrid{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.gbtn{width:34px;height:34px;border-radius:8px;border:2px solid var(--border);background:var(--soft);color:var(--text);cursor:pointer;font:inherit;font-size:.85rem}
+.gbtn.done{background:var(--soft2);border-color:var(--accent)}
+.gbtn.cur{outline:2px solid var(--accent2)}
+#examNav{justify-content:space-between;margin-top:14px}
+.score-big{font-size:2.4rem;font-weight:800;color:var(--accent);text-align:center;margin:8px 0 4px}
+.review-item{border-top:1px solid var(--border);padding:10px 0;font-size:.93rem;line-height:1.45}
+.ok{color:var(--good-tx);font-weight:600}
+.no{color:var(--bad-tx);font-weight:600}
+.trow{display:flex;justify-content:space-between;border-bottom:1px dashed var(--border);padding:6px 0;font-size:.92rem}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.stat{background:var(--soft);border-radius:12px;padding:12px;text-align:center}
+.sv{font-size:1.4rem;font-weight:800;color:var(--accent)}
+.sk{font-size:.8rem;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--border)}
+.mini{background:var(--track);border-radius:99px;height:8px;width:90px;overflow:hidden}
+.mini>div{height:100%;background:var(--accent2)}
+.focus{background:var(--soft2);padding:10px;border-radius:10px;margin-top:10px}
+.note{font-size:.85rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>Pharmacology MCQ Simulator</h1>
+    <div class="nav">
+      <button class="btn small" id="navHome">🏠 Home</button>
+      <button class="btn small" id="navDash">📊 Dashboard</button>
+      <button class="btn small" id="themeBtn">🌙 Dark</button>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <div id="home" class="card">
+    <div id="resumeBox" class="resume hidden">
+      <span id="resumeText"></span>
+      <button class="btn small" id="resumeBtn">Resume</button>
+      <button class="btn small ghost" id="discardBtn">Discard</button>
+    </div>
+    <h2>1. Choose a mode</h2>
+    <div class="modes">
+      <button class="modeCard active" data-mode="practice"><strong>📝 Practice</strong><span>Instant feedback. Your stats and spaced repetition are saved.</span></button>
+      <button class="modeCard" data-mode="study"><strong>📚 Study</strong><span>Explanation first, then the question. No timer, no scoring.</span></button>
+      <button class="modeCard" data-mode="exam"><strong>⏳ Exam</strong><span>Fixed time limit. No feedback until you submit.</span></button>
+    </div>
+    <h2>2. Choose topics</h2>
+    <div class="chips" id="topicButtons"></div>
+    <div class="row">
+      <label>Number of questions:
+        <select id="countSel">
+          <option value="10">10</option>
+          <option value="20" selected>20</option>
+          <option value="50">50</option>
+          <option value="all">All</option>
+        </select>
+      </label>
+    </div>
+    <div id="practiceOpts" class="row">
+      <label><input type="checkbox" id="timerChk" checked> Timer (25 seconds per question)</label>
+    </div>
+    <div id="examOpts" class="row hidden">
+      <label>Time limit:
+        <select id="examTime">
+          <option value="30">30 minutes</option>
+          <option value="60" selected>60 minutes</option>
+          <option value="90">90 minutes</option>
+        </select>
+      </label>
+    </div>
+    <p id="studyNote" class="note hidden">Study mode: nothing is scored and your stats are not changed.</p>
+    <p class="note">Questions you miss come up more often. Questions you get right several times in a row come up less.</p>
+    <button class="btn primary" id="startBtn">Start</button>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="quiz" class="card hidden">
+    <div class="progress"><div id="bar"></div></div>
+    <div class="meta">
+      <span id="modeLabel" class="pill"></span>
+      <span id="counter"></span>
+      <span>Score: <strong id="liveScore">0</strong></span>
+      <span class="timer" id="timer"></span>
+    </div>
+    <span class="tag" id="qTag"></span>
+    <div class="question" id="qText"></div>
+    <div class="opts" id="opts"></div>
+    <div id="feedback" class="feedback hidden"></div>
+    <div id="navGrid" class="navgrid hidden"></div>
+    <div id="examNav" class="row hidden">
+      <button class="btn ghost" id="examPrev">← Previous</button>
+      <button class="btn ghost" id="examNext">Next →</button>
+    </div>
+    <button class="btn primary hidden" id="examSubmit" style="margin-top:10px">Submit exam</button>
+    <button class="btn primary hidden" id="nextBtn" style="margin-top:14px">Next</button>
+  </div>
+
+  <!-- RESULT -->
+  <div id="result" class="card hidden">
+    <h2 id="resultTitle" class="center"></h2>
+    <div class="score-big" id="finalScore"></div>
+    <p class="center" id="finalMsg"></p>
+    <div id="sessionTopics"></div>
+    <div id="reviewList"></div>
+    <button class="btn primary" id="retryWrong" style="margin-top:12px">Practise the questions I got wrong</button>
+    <button class="btn ghost block" id="resHome">Home</button>
+    <button class="btn ghost block" id="resDash">Dashboard</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dash" class="card hidden">
+    <h2>Your progress</h2>
+    <div class="stats" id="dashStats"></div>
+    <p class="note">"Mastered" means answered correctly 4 times in a row without a miss.</p>
+    <h3>Topic accuracy</h3>
+    <div id="topicTable"></div>
+    <h3>Currently missed</h3>
+    <div id="missedList"></div>
+    <button class="btn primary" id="practiceMissed" style="margin-top:10px">Practise missed questions</button>
+    <h3>Recent sessions</h3>
+    <div id="sessionLog"></div>
+    <button class="btn ghost" id="resetBtn" style="margin-top:16px">Reset all progress</button>
+  </div>
+</div>
+
+<script>
+const QUESTIONS = [
+  { t:"Basics & Definitions", q:"Which best explains the origin of the word 'Pharmacology'?", o:["pharmakon (drug) and logos (study)", "pharmakos and logia", "pharma and graphos", "pharmakon and genesis"], a:0, e:"Pharmacology comes from Greek pharmakon (drug) and logos (study)." },
+  { t:"Essential Drugs & DRF", q:"The Bamako Initiative of 1987 gave rise to which programme in Africa?", o:["National Health Insurance Scheme", "Expanded Programme on Immunization", "Essential Drug Programme", "Primary Health Care Programme"], a:2, e:"The Bamako Initiative led to the Essential Drug Programme and drug revolving funds." },
+  { t:"Basics & Definitions", q:"What the body does to a drug is called?", o:["Pharmacodynamics", "Pharmacokinetics", "Pharmacognosy", "Pharmacovigilance"], a:1, e:"Pharmacokinetics is what the body does to the drug: absorption, distribution, metabolism and excretion. Pharmacodynamics is what the drug does to the body." },
+  { t:"Adverse Effects & Interactions", q:"The toxic metabolite of paracetamol that damages the liver in overdose is called?", o:["Acetaldehyde", "Disulfiram", "Primaquine", "NAPQI"], a:3, e:"NAPQI is the toxic metabolite. In overdose, glutathione is depleted and NAPQI damages liver cells." },
+  { t:"Basics & Definitions", q:"The study of how a patient's genetic makeup affects the response to drugs is called?", o:["Pharmacogenetics", "Pharmacognosy", "Pharmacodynamics", "Pharmacopoeia"], a:0, e:"Pharmacogenetics studies how genetic differences affect drug response." },
+  { t:"Basics & Definitions", q:"Side effects of drugs are best described as effects that are:", o:["Severe and require hospitalisation", "Never caused by the drug", "Of lesser severity and tolerable", "Always fatal"], a:2, e:"Side effects are usually mild, predictable and tolerable, unlike serious adverse reactions." },
+  { t:"Adverse Effects & Interactions", q:"Stevens-Johnson Syndrome is a severe adverse effect commonly associated with which group of drugs?", o:["Paracetamol", "Sulfonamides", "Insulin", "Vitamin C"], a:1, e:"Sulfonamides are a well-known cause of Stevens-Johnson Syndrome, a serious skin reaction." },
+  { t:"Adverse Effects & Interactions", q:"Which of these drugs may trigger haemolysis in a patient with G6PD deficiency?", o:["Amoxicillin", "Metformin", "Primaquine", "Omeprazole"], a:2, e:"Primaquine can cause haemolysis in people with G6PD deficiency." },
+  { t:"Legal & Safety", q:"The Pharmacovigilance Centre for the South-South geopolitical zone of Nigeria is located at?", o:["UBTH", "LUTH", "UCH", "UNTH"], a:0, e:"Per your answer key: UBTH (University of Benin Teaching Hospital)." },
+  { t:"Prescriptions & Dosing", q:"The prescription abbreviation 'Nocte' means?", o:["In the morning", "As needed", "Every 6 hours", "At night / bedtime"], a:3, e:"Nocte means at night (bedtime). Mane means in the morning." },
+  { t:"Prescriptions & Dosing", q:"A drug prescribed for '5/7' is to be given for?", o:["5 times in 7 hours", "5 days", "5 weeks", "5 doses daily"], a:1, e:"5/7 means 5 days of treatment." },
+  { t:"Prescriptions & Dosing", q:"A drug prescribed 8-hourly but given as TDS within 12 hours (6am-6pm) may result in:", o:["Faster excretion of the drug", "Loss of potency of the drug", "Drug concentration rising above the therapeutic limit, causing severe adverse effects", "No change in the effect of the drug"], a:2, e:"Giving doses too close together can push blood levels above the therapeutic range." },
+  { t:"Drug Sources & Classes", q:"Lasix is the brand name of which drug?", o:["Furosemide", "Losartan", "Lisinopril", "Lignocaine"], a:0, e:"Lasix is the brand name for furosemide, a diuretic." },
+  { t:"Drug Sources & Classes", q:"Which of the following is NOT a nursing implication of complementary therapy?", o:["Taking a thorough drug history that includes herbal remedies", "Educating patients on the risks of combining herbal remedies with prescribed drugs", "Being aware that galenicals may interact with prescribed drugs", "Being judgmental towards patients who use herbal remedies"], a:3, e:"Nurses should be non-judgemental and ask about herbal use, since it can interact with prescribed drugs." },
+  { t:"Drug Sources & Classes", q:"In the preparation of galenicals, alcohol is used because it serves as both:", o:["Colouring agent and sweetener", "Solvent and preservative", "Antibiotic and antidote", "Emulsifier and stabiliser"], a:1, e:"Alcohol dissolves plant constituents (solvent) and preserves the preparation." },
+  { t:"Drug Sources & Classes", q:"Quinine is a drug obtained from which plant source?", o:["Foxglove", "Opium poppy", "Cinchona bark", "Neem leaves"], a:2, e:"Quinine is extracted from cinchona bark." },
+  { t:"Drug Sources & Classes", q:"Which of the following is an example of a drug from a mineral source?", o:["Morphine", "Digoxin", "Insulin", "Calcium carbonate"], a:3, e:"Calcium carbonate is a mineral-based drug. Morphine and digoxin are plant-derived, and insulin is a hormone." },
+  { t:"Drug Sources & Classes", q:"Steroids should be withdrawn gradually (dose tapering) in order to:", o:["Allow the adrenal glands to resume normal cortisol production", "Increase the potency of the steroid", "Reduce the cost of treatment", "Prevent the steroid from being photolabile"], a:0, e:"Long-term steroids suppress the adrenal glands, so tapering lets cortisol production recover." },
+  { t:"Drug Sources & Classes", q:"Which of the following is NOT a steroid?", o:["Dexamethasone", "Ibuprofen", "Hydrocortisone", "Betamethasone"], a:1, e:"Ibuprofen is an NSAID, not a steroid. The others are corticosteroids." },
+  { t:"Legal & Safety", q:"Which of the following is NOT a controlled drug?", o:["Pethidine", "Diazepam", "Amoxicillin", "Morphine"], a:2, e:"Amoxicillin is an antibiotic and is not controlled. Pethidine, diazepam and morphine are controlled." },
+  { t:"Essential Drugs & DRF", q:"Which of the following is NOT a condition for a drug to be classified as essential?", o:["It must be efficacious", "It must be readily affordable", "It must treat a disease that is prevalent", "It must be a newly discovered branded product"], a:3, e:"Essential drugs are effective, affordable, safe and address common conditions. They are not new branded products." },
+  { t:"Essential Drugs & DRF", q:"In unity dose dispensing, drugs are dispensed to a patient for no longer than?", o:["6 hours", "12 hours", "7 days", "24 hours"], a:3, e:"Unit dose dispensing covers up to 24 hours of doses at a time." },
+  { t:"Basics & Definitions", q:"Polypharmacy is defined as the prescribing of:", o:["Five or more drugs simultaneously", "Two drugs simultaneously", "Three drugs only", "One drug only"], a:0, e:"Polypharmacy is generally defined as five or more drugs at the same time." },
+  { t:"Basics & Definitions", q:"A child of about 12-13 years with a body weight comparable to an adult, who may be given full adult doses, is called a?", o:["Paediatric adult", "Clinical adult", "Geriatric", "Neonate"], a:1, e:"A 'clinical adult' is a child whose size and weight are close to an adult's, so adult doses may be used." },
+  { t:"Basics & Definitions", q:"Underdose of a drug leads to?", o:["Toxicity and death", "Hypersensitivity", "Habituation", "Treatment failure"], a:3, e:"Too little drug fails to reach the therapeutic level, so the treatment does not work." },
+  { t:"Routes & Administration", q:"Which diluent must NOT be used to reconstitute Ceftriaxone (Rocephin)?", o:["Water for injection", "Lidocaine", "Calcium-containing solutions such as Ringer's lactate", "Both (a) and (b)"], a:2, e:"Ceftriaxone must not be mixed with calcium-containing solutions such as Ringer's lactate, because of precipitation risk." },
+  { t:"Routes & Administration", q:"Which route of drug administration has the fastest onset of action?", o:["Intravenous", "Intramuscular", "Subcutaneous", "Oral"], a:0, e:"IV drugs go straight into the bloodstream, so they act fastest." },
+  { t:"Routes & Administration", q:"Drugs given by the sublingual route are absorbed directly into the bloodstream and therefore bypass?", o:["Absorption", "First-pass hepatic metabolism", "Distribution", "Excretion"], a:1, e:"Sublingual drugs drain into the systemic circulation, so they avoid first-pass liver metabolism." },
+  { t:"Routes & Administration", q:"A solid preparation that melts at body temperature after insertion into the rectum is called a?", o:["Lozenge", "Enema", "Linctus", "Suppository"], a:3, e:"A suppository is a solid that melts at body temperature after rectal insertion." },
+  { t:"Adverse Effects & Interactions", q:"Flumazenil is the specific antidote for overdose of?", o:["Opioids", "Benzodiazepines", "Warfarin", "Organophosphates"], a:1, e:"Flumazenil reverses benzodiazepine overdose. Naloxone is the antidote for opioids." },
+  { t:"Routes & Administration", q:"Respecting the patient's decision not to take a drug is which of the 10 rights of medication administration?", o:["Right to refuse", "Right reason", "Right response", "Right documentation"], a:0, e:"The right to refuse means respecting a patient's decision not to take a medication." },
+  { t:"Legal & Safety", q:"The preferable storage for photolabile drugs is?", o:["Refrigerator", "Freezer", "Transparent bottles on an open shelf", "Amber-coloured containers or dark cupboards"], a:3, e:"Photolabile drugs break down in light, so they need amber containers or dark storage." },
+  { t:"Basics & Definitions", q:"Drug resistance refers to?", o:["A patient needing higher doses for the same effect", "Micro-organisms developing the ability to withstand the effect of a drug", "Psychological reliance on a drug", "Compulsive drug-seeking behaviour"], a:1, e:"Drug resistance occurs when micro-organisms survive the drug's effect." },
+  { t:"Legal & Safety", q:"A nurse who witnesses abuse or diversion of controlled drugs and fails to report it is:", o:["Not responsible in any way", "Entitled to a reward", "Liable only if she is the one in charge", "Equally culpable under the law"], a:3, e:"Failing to report abuse or diversion makes the witnessing nurse equally responsible." },
+  { t:"Basics & Definitions", q:"The half-life of a drug is the time required for the drug concentration in the blood to?", o:["Double", "Reach zero", "Fall by 50%", "Be fully absorbed"], a:2, e:"Half-life is the time for the blood concentration to fall by half." },
+  { t:"Adverse Effects & Interactions", q:"Probenecid increases the level and efficacy of ampicillin. This is an example of:", o:["Antagonism", "Potentiation", "Idiosyncrasy", "Tolerance"], a:1, e:"Potentiation is when one drug increases the effect of another." },
+  { t:"Adverse Effects & Interactions", q:"ACE inhibitors such as lisinopril should not be combined with potassium supplements because of the risk of:", o:["Hypokalemia", "Hypoglycaemia", "Hypernatraemia", "Hyperkalemia"], a:3, e:"ACE inhibitors raise potassium levels, so adding potassium supplements risks hyperkalaemia." },
+  { t:"Adverse Effects & Interactions", q:"When amiodarone is given with digoxin, it may:", o:["Raise digoxin levels, leading to toxicity", "Lower digoxin levels", "Cancel the action of digoxin", "Have no effect on digoxin"], a:0, e:"Amiodarone increases digoxin levels, so digoxin toxicity can occur." },
+  { t:"Adverse Effects & Interactions", q:"Tetracycline is contraindicated in: (i) Pregnancy (ii) Children under 12 years (iii) Adults above 18 years (iv) Elderly patients", o:["i & ii only", "i, ii & iii only", "iii & iv only", "All of the above"], a:0, e:"Tetracyclines are contraindicated in pregnancy and in children under 12 (they affect bone and teeth development)." },
+  { t:"Essential Drugs & DRF", q:"The Drug Revolving Fund (DRF) is designed mainly to:", o:["Provide free drugs to all patients", "Ensure continuous availability of quality essential medicines", "Pay the salaries of hospital staff", "Fund the construction of hospital buildings"], a:1, e:"The DRF keeps essential medicines continuously available through cost recovery." },
+  { t:"Essential Drugs & DRF", q:"The money generated from drug sales in a DRF is used exclusively to:", o:["Pay staff salaries", "Buy hospital equipment", "Replenish the drug stock", "Fund general hospital expenses"], a:2, e:"DRF sales income is used to restock drugs, keeping the fund revolving." },
+  { t:"Essential Drugs & DRF", q:"Sources of initial capital for a DRF include:", o:["Government allocations", "Donor agencies such as WHO and UNICEF", "Community contributions", "All of the above"], a:3, e:"DRFs can be started from government, donors and community contributions." },
+  { t:"Essential Drugs & DRF", q:"In a DRF, drugs are sold to patients at?", o:["Cost price plus a small mark-up", "Below cost price", "Market price with a very high profit", "No cost at all"], a:0, e:"Drugs are sold at cost plus a small mark-up, so the fund can restock." },
+  { t:"Essential Drugs & DRF", q:"DRF funds must be kept in:", o:["The general hospital revenue account", "The ward cash box", "A separate dedicated bank account", "The personal account of the head pharmacist"], a:2, e:"DRF money should be in its own dedicated bank account, separate from other hospital funds." },
+  { t:"Essential Drugs & DRF", q:"To prevent unauthorised withdrawals, DRF financial transactions typically require:", o:["At least two authorised signatories", "One signatory only", "The signature of the patient", "No signature"], a:0, e:"Two authorised signatories help prevent misuse of DRF funds." },
+  { t:"Essential Drugs & DRF", q:"The cost of drugs given under exemptions to vulnerable patients should be:", o:["Absorbed directly by the DRF", "Paid for by the nurse", "Recovered from the patient later", "Reimbursed by the government or a hospital welfare budget"], a:3, e:"Exempt patients' drug costs should be reimbursed by government or a welfare budget, not absorbed by the fund." },
+  { t:"Essential Drugs & DRF", q:"Which of the following is NOT a role of the nurse in a DRF scheme?", o:["Accurate record-keeping of drugs received and administered", "Minimising wastage through correct storage and FEFO", "Dispensing drugs free to any patient who requests", "Verifying the status of patients who qualify for exemption"], a:2, e:"Nurses should not dispense free drugs to anyone who asks. That undermines the scheme and the exemption rules." },
+  { t:"Essential Drugs & DRF", q:"The Average Monthly Consumption Rate (AMCR) of a drug is calculated by averaging the quantity dispensed over:", o:["One month only", "3-4 consecutive months, excluding abnormal months", "The whole year", "24 months"], a:1, e:"AMCR uses 3-4 consecutive normal months, leaving out abnormal months." },
+  { t:"Essential Drugs & DRF", q:"Which of these months should be excluded from AMCR calculation? (i) Strike months (ii) Festival months (iii) Outbreak/epidemic months (iv) Months with normal dispensing", o:["i, ii & iii only", "i & iv only", "ii & iv only", "All of the above"], a:0, e:"Abnormal months such as strikes, festivals and outbreaks are excluded. Normal months are kept." },
+  { t:"Essential Drugs & DRF", q:"A pharmacy dispensed 3,500, 4,000 and 4,500 units of a drug in three normal months. What is the AMCR?", o:["3,500 units", "4,500 units", "4,000 units", "12,000 units"], a:2, e:"(3,500 + 4,000 + 4,500) \u00f7 3 = 12,000 \u00f7 3 = 4,000 units." },
+];
+
+
+QUESTIONS.forEach((q,i)=>q.id=i+1);
+
+const KEY='pharmMCQ_v2', TIME_PER_Q=25, BOX_WEIGHT=[5,3,2,1,0.5];
+const $=id=>document.getElementById(id);
+const L=i=>String.fromCharCode(65+i);
+const byId=id=>QUESTIONS[id-1];
+const TOPICS=[...new Set(QUESTIONS.map(q=>q.t))];
+let db=loadDB();
+let session=null, timerId=null;
+let selTopics=new Set(TOPICS), curMode='practice', setupTimed=true, examMinutes=60;
+
+// ---------- storage ----------
+function loadDB(){
+  let d={};
+  try{ d=JSON.parse(localStorage.getItem(KEY))||{}; }catch(e){}
+  return Object.assign({q:{},sessions:[],inProgress:null,dark:false}, d);
+}
+function saveDB(){ try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(e){} }
+
+// ---------- spaced repetition ----------
+function weight(id){ const s=db.q[id]; if(!s||!s.seen) return 3; return BOX_WEIGHT[s.box]; }
+function pickQuestions(ids,n){
+  const pool=ids.slice(), out=[];
+  while(out.length<n && pool.length){
+    const tot=pool.reduce((a,id)=>a+weight(id),0);
+    let r=Math.random()*tot, k=0;
+    for(;k<pool.length-1;k++){ r-=weight(pool[k]); if(r<=0) break; }
+    out.push(pool.splice(k,1)[0]);
+  }
+  return out;
+}
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function recordAnswer(id,ok){
+  const s=db.q[id]||(db.q[id]={seen:0,correct:0,box:0});
+  s.seen++;
+  if(ok){ s.correct++; s.box=Math.min(s.box+1,4); } else { s.box=0; }
+  s.last=Date.now();
+}
+function scoreOf(s){ return Object.values(s.answers).filter(a=>a&&a.ok).length; }
+
+// ---------- screens ----------
+function show(name){
+  ['home','quiz','result','dash'].forEach(s=>$(s).classList.toggle('hidden', s!==name));
+  if(name!=='quiz') clearInterval(timerId);
+  window.scrollTo(0,0);
+}
+function applyTheme(){
+  document.body.classList.toggle('dark', !!db.dark);
+  $('themeBtn').textContent = db.dark ? '☀️ Light' : '🌙 Dark';
+}
+$('themeBtn').onclick=()=>{ db.dark=!db.dark; saveDB(); applyTheme(); };
+$('navHome').onclick=()=>goHome();
+$('navDash').onclick=()=>renderDash();
+$('resHome').onclick=()=>goHome();
+$('resDash').onclick=()=>renderDash();
+function goHome(){ renderHome(); show('home'); }
+
+// ---------- home ----------
+function renderTopics(){
+  const box=$('topicButtons'); box.innerHTML='';
+  const allOn=selTopics.size===TOPICS.length;
+  const all=document.createElement('button');
+  all.className='chip'+(allOn?' sel':'');
+  all.textContent=(allOn?'✓ ':'')+'All topics';
+  all.onclick=()=>{ selTopics = allOn ? new Set() : new Set(TOPICS); renderTopics(); };
+  box.appendChild(all);
+  TOPICS.forEach(t=>{
+    const n=QUESTIONS.filter(q=>q.t===t).length, on=selTopics.has(t);
+    const b=document.createElement('button');
+    b.className='chip'+(on?' sel':'');
+    b.textContent=(on?'✓ ':'')+t+' ('+n+')';
+    b.onclick=()=>{ if(on) selTopics.delete(t); else selTopics.add(t); renderTopics(); };
+    box.appendChild(b);
+  });
+}
+function renderHome(){
+  renderTopics();
+  document.querySelectorAll('.modeCard').forEach(b=>b.classList.toggle('active', b.dataset.mode===curMode));
+  $('practiceOpts').classList.toggle('hidden', curMode!=='practice');
+  $('examOpts').classList.toggle('hidden', curMode!=='exam');
+  $('studyNote').classList.toggle('hidden', curMode!=='study');
+  const p=db.inProgress;
+  if(p && !p.finished){
+    $('resumeBox').classList.remove('hidden');
+    $('resumeText').textContent=`Unfinished ${p.mode} quiz: question ${p.idx+1} of ${p.ids.length}.`;
+  } else { $('resumeBox').classList.add('hidden'); }
+}
+document.querySelectorAll('.modeCard').forEach(b=>b.onclick=()=>{ curMode=b.dataset.mode; renderHome(); });
+$('resumeBtn').onclick=()=>{
+  session=db.inProgress;
+  if(!session) return;
+  if(session.mode==='exam') startExam(); else startPractice();
+};
+$('discardBtn').onclick=()=>{ db.inProgress=null; saveDB(); renderHome(); };
+$('startBtn').onclick=()=>{
+  const base=QUESTIONS.filter(q=>selTopics.has(q.t)).map(q=>q.id);
+  if(!base.length){ alert('Pick at least one topic.'); return; }
+  const c=$('countSel').value;
+  const n = c==='all' ? base.length : Math.min(+c, base.length);
+  setupTimed=$('timerChk').checked;
+  examMinutes=+$('examTime').value;
+  startWithIds(curMode, pickQuestions(base,n));
+};
+
+function startWithIds(mode, ids){
+  if(!ids.length){ alert('No questions to show.'); return; }
+  if(mode==='study'){
+    session={mode:'study',ids,idx:0,stage:'explain',finished:false};
+    db.inProgress=null; saveDB(); startStudy(); return;
+  }
+  if(mode==='exam'){
+    session={mode:'exam',ids,idx:0,answers:{},endAt:Date.now()+examMinutes*60000,finished:false,wrongIds:[]};
+  } else {
+    session={mode:'practice',ids,idx:0,answers:{},timed:setupTimed,wrongIds:[],finished:false};
+  }
+  db.inProgress=session; saveDB();
+  if(mode==='exam') startExam(); else startPractice();
+}
+
+// ---------- shared card ----------
+function renderCard(q, onPick, chosen, reveal, examStyle){
+  $('qTag').textContent=`${q.t} · From your question bank`;
+  $('qText').textContent=q.q;
+  const box=$('opts'); box.innerHTML='';
+  q.o.forEach((text,i)=>{
+    const b=document.createElement('button');
+    b.className='opt';
+    b.textContent=L(i)+'.  '+text;
+    if(reveal && !examStyle){
+      b.disabled=true;
+      if(i===q.a) b.classList.add('correct');
+      else if(i===chosen) b.classList.add('wrong');
+    }
+    if(examStyle && i===chosen) b.classList.add('selected');
+    if(!reveal || examStyle) b.onclick=()=>onPick(i);
+    box.appendChild(b);
+  });
+}
+function countdown(sec,onEnd){
+  clearInterval(timerId);
+  let t=sec; const el=$('timer');
+  el.textContent='⏱ '+t+'s'; el.classList.remove('low');
+  timerId=setInterval(()=>{
+    t--;
+    el.textContent='⏱ '+t+'s';
+    el.classList.toggle('low', t<=5);
+    if(t<=0){ clearInterval(timerId); onEnd(); }
+  },1000);
+}
+function setExamUI(on){
+  $('examNav').classList.toggle('hidden',!on);
+  $('navGrid').classList.toggle('hidden',!on);
+  $('examSubmit').classList.toggle('hidden',!on);
+}
+
+// ---------- practice ----------
+function startPractice(){ show('quiz'); $('modeLabel').textContent='Practice'; renderPractice(); }
+function renderPractice(){
+  const s=session, q=byId(s.ids[s.idx]), done=!!s.answers[s.idx];
+  setExamUI(false);
+  $('counter').textContent=`Question ${s.idx+1} of ${s.ids.length}`;
+  $('bar').style.width=(s.idx/s.ids.length*100)+'%';
+  $('liveScore').textContent=scoreOf(s);
+  $('timer').textContent=''; $('timer').classList.remove('low');
+  renderCard(q, practiceChoose, done ? s.answers[s.idx].chosen : null, done, false);
+  const f=$('feedback');
+  if(done){
+    const a=s.answers[s.idx];
+    const head = a.ok ? '✅ Correct!' : (a.chosen===-1 ? '⏰ Time is up.' : '❌ Not quite.');
+    f.className='feedback '+(a.ok?'good':'bad');
+    f.innerHTML=`<strong>${head}</strong> The answer is <strong>${L(q.a)}</strong>. ${q.e}`;
+    f.classList.remove('hidden');
+  } else { f.classList.add('hidden'); }
+  const nb=$('nextBtn');
+  nb.classList.toggle('hidden', !done);
+  nb.textContent = s.idx===s.ids.length-1 ? 'See results' : 'Next question';
+  clearInterval(timerId);
+  if(s.timed && !done) countdown(TIME_PER_Q, ()=>practiceChoose(-1));
+}
+function practiceChoose(i){
+  const s=session;
+  if(!s || s.mode!=='practice' || s.answers[s.idx]) return;
+  clearInterval(timerId);
+  const id=s.ids[s.idx], q=byId(id), ok=i===q.a;
+  s.answers[s.idx]={chosen:i, ok};
+  recordAnswer(id, ok);
+  if(!ok) s.wrongIds.push(id);
+  db.inProgress=s; saveDB();
+  renderPractice();
+}
+
+// ---------- study ----------
+function startStudy(){ show('quiz'); $('modeLabel').textContent='Study'; renderStudy(); }
+function renderStudy(){
+  const s=session;
+  if(s.idx>=s.ids.length) return finishStudy();
+  const q=byId(s.ids[s.idx]);
+  setExamUI(false);
+  $('counter').textContent=`Card ${s.idx+1} of ${s.ids.length}`;
+  $('bar').style.width=(s.idx/s.ids.length*100)+'%';
+  $('liveScore').textContent='—';
+  $('timer').textContent=''; clearInterval(timerId);
+  $('qTag').textContent=`${q.t} · Study card`;
+  const f=$('feedback'), nb=$('nextBtn');
+  if(s.stage==='explain'){
+    $('qText').textContent='Read this first:';
+    $('opts').innerHTML=`<div class="explain"><strong>Correct answer: ${L(q.a)}. ${q.o[q.a]}</strong><p>${q.e}</p></div>`;
+    f.classList.add('hidden');
+    nb.classList.remove('hidden'); nb.textContent='Now test yourself →';
+  } else if(!('studyChoice' in s)){
+    $('qText').textContent=q.q;
+    renderCard(q, studyChoose, null, false, false);
+    f.classList.add('hidden'); nb.classList.add('hidden');
+  } else {
+    $('qText').textContent=q.q;
+    renderCard(q, null, s.studyChoice, true, false);
+    const ok=s.studyChoice===q.a;
+    f.className='feedback '+(ok?'good':'bad');
+    f.innerHTML=`<strong>${ok?'✅ Right':'❌ Not quite'}</strong> (checked, not scored). ${q.e}`;
+    f.classList.remove('hidden');
+    nb.classList.remove('hidden'); nb.textContent='Next card →';
+  }
+}
+function studyChoose(i){ session.studyChoice=i; renderStudy(); }
+function finishStudy(){
+  session.finished=true;
+  db.sessions.unshift({date:Date.now(), mode:'study', total:session.ids.length, score:null, pct:null, topics:''});
+  db.sessions=db.sessions.slice(0,30);
+  saveDB();
+  show('result');
+  $('resultTitle').textContent='Study session complete';
+  $('finalScore').textContent=`📚 ${session.ids.length} cards reviewed`;
+  $('finalMsg').textContent='No scores were recorded in study mode.';
+  $('sessionTopics').innerHTML=''; $('reviewList').innerHTML='';
+  $('retryWrong').classList.add('hidden');
+}
+
+// ---------- exam ----------
+function startExam(){ show('quiz'); $('modeLabel').textContent='Exam'; renderExam(); clearInterval(timerId); tickExam(); timerId=setInterval(tickExam,1000); }
+function fmt(sec){ const m=Math.floor(sec/60), r=sec%60; return m+':'+String(r).padStart(2,'0'); }
+function tickExam(){
+  const s=session; if(!s || s.mode!=='exam' || s.finished) return;
+  const rem=Math.max(0, Math.round((s.endAt-Date.now())/1000));
+  const el=$('timer');
+  el.textContent='⏱ '+fmt(rem);
+  el.classList.toggle('low', rem<=300);
+  if(rem<=0){ clearInterval(timerId); submitExam(true); }
+}
+function renderExam(){
+  const s=session, q=byId(s.ids[s.idx]), a=s.answers[s.idx];
+  setExamUI(true);
+  $('counter').textContent=`Question ${s.idx+1} of ${s.ids.length}`;
+  $('bar').style.width=(s.idx/s.ids.length*100)+'%';
+  $('liveScore').textContent='—';
+  renderCard(q, examPick, a?a.chosen:null, false, true);
+  $('feedback').classList.add('hidden');
+  $('nextBtn').classList.add('hidden');
+  $('examPrev').disabled = s.idx===0;
+  $('examNext').disabled = s.idx===s.ids.length-1;
+  renderGrid();
+}
+function examPick(i){ session.answers[session.idx]={chosen:i}; db.inProgress=session; saveDB(); renderExam(); }
+function renderGrid(){
+  const s=session, g=$('navGrid'); g.innerHTML='';
+  s.ids.forEach((_,k)=>{
+    const b=document.createElement('button');
+    b.textContent=k+1;
+    b.className='gbtn'+(k===s.idx?' cur':'')+(s.answers[k]?' done':'');
+    b.onclick=()=>{ s.idx=k; db.inProgress=s; saveDB(); renderExam(); };
+    g.appendChild(b);
+  });
+}
+$('examPrev').onclick=()=>{ if(session.idx>0){ session.idx--; db.inProgress=session; saveDB(); renderExam(); } };
+$('examNext').onclick=()=>{ if(session.idx<session.ids.length-1){ session.idx++; db.inProgress=session; saveDB(); renderExam(); } };
+$('examSubmit').onclick=()=>submitExam(false);
+
+function submitExam(auto){
+  const s=session;
+  if(!s || s.mode!=='exam' || s.finished) return;
+  const unanswered=s.ids.filter((_,k)=>!s.answers[k]).length;
+  if(!auto && unanswered>0 && !confirm(`You still have ${unanswered} unanswered question(s). Submit anyway?`)) return;
+  clearInterval(timerId);
+  s.ids.forEach((id,k)=>{
+    const q=byId(id);
+    if(!s.answers[k]) s.answers[k]={chosen:-1};
+    const ok = s.answers[k].chosen===q.a;
+    s.answers[k].ok=ok;
+    recordAnswer(id, ok);
+    if(!ok) s.wrongIds.push(id);
+  });
+  finishSession();
+}
+
+// ---------- results ----------
+function finishSession(){
+  const s=session;
+  clearInterval(timerId);
+  s.finished=true; db.inProgress=null;
+  const total=s.ids.length, score=scoreOf(s), pct=Math.round(score/total*100);
+  db.sessions.unshift({date:Date.now(), mode:s.mode, total, score, pct,
+    topics:[...new Set(s.ids.map(id=>byId(id).t))].join(', ')});
+  db.sessions=db.sessions.slice(0,30);
+  saveDB();
+  renderResult();
+}
+function renderResult(){
+  const s=session, total=s.ids.length, score=scoreOf(s), pct=Math.round(score/total*100);
+  show('result');
+  $('resultTitle').textContent = s.mode==='exam' ? 'Exam submitted' : 'Quiz complete';
+  $('finalScore').textContent=`${score} / ${total}  (${pct}%)`;
+  $('finalMsg').textContent = pct>=80 ? 'Excellent work. You are ready for this topic. 🎉'
+    : pct>=60 ? 'Good effort. Review the ones you missed below. 👍'
+    : 'Keep practising. Read the explanations and try again. 💪';
+  const byT={};
+  s.ids.forEach((id,k)=>{
+    const t=byId(id).t; byT[t]=byT[t]||{n:0,c:0}; byT[t].n++;
+    if(s.answers[k] && s.answers[k].ok) byT[t].c++;
+  });
+  $('sessionTopics').innerHTML = '<h3>By topic</h3>' + Object.entries(byT).map(([t,v])=>
+    `<div class="trow"><span>${t}</span><span>${v.c}/${v.n} (${Math.round(v.c/v.n*100)}%)</span></div>`).join('');
+  const rl=$('reviewList'); rl.innerHTML='<h3>Review</h3>';
+  s.ids.forEach((id,k)=>{
+    const q=byId(id), a=s.answers[k]||{chosen:-1,ok:false};
+    const given = a.chosen===-1 ? 'No answer' : L(a.chosen)+'. '+q.o[a.chosen];
+    const d=document.createElement('div'); d.className='review-item';
+    d.innerHTML = `<div><strong>${k+1}. ${q.q}</strong></div>` +
+      (a.ok ? `<div class="ok">✔ ${L(q.a)}. ${q.o[q.a]}</div>`
+            : `<div class="no">✘ You chose: ${given}</div><div class="ok">✔ Correct: ${L(q.a)}. ${q.o[q.a]}</div>`) +
+      `<div class="muted">${q.e}</div>`;
+    rl.appendChild(d);
+  });
+  const wrong=[...new Set(s.wrongIds)];
+  $('retryWrong').classList.toggle('hidden', wrong.length===0);
+  $('retryWrong').onclick=()=>startWithIds('practice', shuffle(wrong));
+}
+
+// Shared Next button (practice + study)
+$('nextBtn').onclick=()=>{
+  const s=session; if(!s) return;
+  if(s.mode==='practice'){
+    s.idx++;
+    if(s.idx<s.ids.length){ db.inProgress=s; saveDB(); renderPractice(); }
+    else finishSession();
+  } else if(s.mode==='study'){
+    if(s.stage==='explain'){ s.stage='quiz'; }
+    else { s.idx++; s.stage='explain'; delete s.studyChoice; }
+    renderStudy();
+  }
+};
+
+// ---------- dashboard ----------
+function renderDash(){
+  show('dash');
+  let seen=0, correct=0, mastered=0, missedNow=0, attempted=0;
+  QUESTIONS.forEach(q=>{
+    const s=db.q[q.id];
+    if(s && s.seen){
+      attempted++; seen+=s.seen; correct+=s.correct;
+      if(s.box===4) mastered++;
+      if(s.box===0) missedNow++;
+    }
+  });
+  const pct = seen ? Math.round(correct/seen*100)+'%' : '—';
+  $('dashStats').innerHTML = [
+    [`${attempted} / ${QUESTIONS.length}`,'Questions attempted'],
+    [pct,'Overall accuracy'],
+    [mastered,'Mastered'],
+    [missedNow,'Currently missed'],
+    [db.sessions.length,'Sessions']
+  ].map(([v,k])=>`<div class="stat"><div class="sv">${v}</div><div class="sk">${k}</div></div>`).join('');
+
+  let rows='', weakest=null;
+  TOPICS.forEach(t=>{
+    let n=0, c=0;
+    QUESTIONS.filter(q=>q.t===t).forEach(q=>{ const s=db.q[q.id]; if(s){ n+=s.seen; c+=s.correct; } });
+    const p = n ? Math.round(c/n*100) : null;
+    if(n && (weakest===null || p<weakest.p)) weakest={t,p};
+    rows+=`<tr><td>${t}</td><td>${n}</td><td>${p===null?'—':p+'%'}</td><td><div class="mini"><div style="width:${p||0}%"></div></div></td></tr>`;
+  });
+  $('topicTable').innerHTML = `<table><thead><tr><th>Topic</th><th>Answers</th><th>Accuracy</th><th></th></tr></thead><tbody>${rows}</tbody></table>` +
+    (weakest ? `<p class="focus">📌 Focus here next: <strong>${weakest.t}</strong> (${weakest.p}%)</p>` : '<p class="muted">Answer some questions to see your stats.</p>');
+
+  const missed=QUESTIONS.filter(q=>db.q[q.id] && db.q[q.id].seen && db.q[q.id].box===0).map(q=>q.id);
+  $('missedList').innerHTML = missed.length
+    ? missed.slice(0,30).map(id=>`<div class="review-item">${byId(id).q}</div>`).join('') + (missed.length>30 ? `<p class="muted">…and ${missed.length-30} more</p>` : '')
+    : '<p class="muted">No missed questions right now. 🎉</p>';
+  $('practiceMissed').disabled = missed.length===0;
+  $('practiceMissed').onclick=()=>startWithIds('practice', shuffle(missed));
+
+  $('sessionLog').innerHTML = db.sessions.slice(0,10).map(x=>
+    `<div class="review-item">${new Date(x.date).toLocaleString()} · <strong>${x.mode}</strong> · ${x.pct===null ? 'studied '+x.total+' cards' : x.score+'/'+x.total+' ('+x.pct+'%)'}</div>`
+  ).join('') || '<p class="muted">No sessions yet.</p>';
+}
+$('resetBtn').onclick=()=>{
+  if(confirm('Erase all saved progress, stats and history?')){
+    db={q:{},sessions:[],inProgress:null,dark:db.dark};
+    saveDB(); renderDash();
+  }
+};
+
+// ---------- start ----------
+applyTheme();
+goHome();
+</script>
+</body>
+</html>
